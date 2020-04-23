@@ -1,3 +1,5 @@
+"""Rank teams in upcoming VRC tournament"""
+
 #! /usr/bin/env python
 import csv
 import json
