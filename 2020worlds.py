@@ -28,8 +28,8 @@ with open('worlds2020.csv', 'r') as f:
             df_temp = pd.DataFrame.from_dict(data)
             df_rank = df_rank.append(df_temp, ignore_index=True)
 
-df_rank.columns = ['Team', 'Season', 'Program', 'Vrating_rank', 'Vrating']
-df_mgr = pd.merge(df_teams, df_rank, on='Team', how='left', sort=False)
-pd.set_option('display.max_rows', None)
-print(df_mgr)
-df_mgr.to_excel(r'worlds2020.xlsx', index=False, header=True)
+df_rank.columns = ['Team', 'Season', 'Program', 'Vrating_rank', 'Vrating'] #rename colunms
+df_mrg = pd.merge(df_teams, df_rank, on='Team', how='left', sort=False) # merge dataframes
+#pd.set_option('display.max_rows', None)
+#print(df_mrg)
+df_mrg.to_excel(r'worlds2020.xlsx', index=False, header=True) # export dataframe to excel spreadsheet
