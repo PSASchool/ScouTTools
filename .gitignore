@@ -1,8 +1,11 @@
+config.py
 *.csv
+*.txt
 *.json
 *.html
 *.xlsx
 json
 csv
 *.log
-
+./output/*
+__pycache__/

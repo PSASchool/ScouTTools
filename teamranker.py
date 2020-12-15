@@ -11,22 +11,33 @@ from urllib.request import urlopen
 
 pd.set_option('display.max_rows', None)
 
-EVENTCODE = 'RE-VRC-20-2420'
-#SEASON = input('Enter Season - "Change Up" "Tower Takeover" ')
-#SEASON = 'Change%20Up'
-#SEASON = 'Tower%20Takeover'
+df_competitions = pd.read_csv('./output/competitions.csv')
+print(df_competitions)
+
+EVENTCODE = input('Enter the Event Code you want to rank ')
 
 browser = webdriver.Chrome()
 browser.get(
-    'https://www.robotevents.com/robot-competitions/vex-robotics-competition/RE-VRC-20-2420.html#teams')
-time.sleep(10)
+    f'https://www.robotevents.com/robot-competitions/vex-robotics-competition/{EVENTCODE}.html#teams')
 
 df = pd.read_html(browser.page_source)
-df[1].to_csv('%s.csv' % EVENTCODE, index=False)
-df_teams = pd.read_csv('%s.csv' % EVENTCODE)
+browser.close()
+print(df)
+try:
+    df[0].to_csv('./output/%s.csv' % EVENTCODE, index=False)
+    df_teams = pd.read_csv('./output/%s.csv' % EVENTCODE)
+    team_list = df_teams['Team']
+except:
+    df[1].to_csv('./output/%s.csv' % EVENTCODE, index=False)
+    df_teams = pd.read_csv('./output/%s.csv' % EVENTCODE)
+    team_list = df_teams['Team']
 
-""" Load rankings into file for teams in csv file """
-# with open('%s.csv' % EVENTCODE, 'r') as f:
+print(team_list)
+# This part will pull all the teams and write them to excel.  (move this to teamranker)
+# with pd.ExcelWriter(f'./output/{EVENTCODE}.xlsx') as writer:  # pylint: disable=abstract-class-instantiated
+
+
+# with open('./output/%s.csv' % EVENTCODE, 'r') as f:
 #    READER = csv.reader(f)
 #    for team in READER:
 #        t = team[0]
@@ -46,5 +57,5 @@ df_teams = pd.read_csv('%s.csv' % EVENTCODE)
 #print(df_mrg.sort_values(by='Vrating', ascending=False))
 #
 #""" Export dataframe to excel spreadsheet """
-##df_mrg.to_excel(r'%s.xlsx' % EVENTCODE, index=False, header=True)
+##df_mrg.to_excel(f'./output/%s.xlsx' % EVENTCODE, index=False, header=True)
 print(df_teams.sort_values(by='Team'))
