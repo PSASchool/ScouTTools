@@ -9,3 +9,5 @@ csv
 *.log
 ./output/*
 __pycache__/
+competitions.py
+teamranker.py

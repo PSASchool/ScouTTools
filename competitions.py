@@ -7,8 +7,12 @@ import requests
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
+import config  # This file contains the bearer key
 
-userkey = {"user_key": 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNTYzZTU0M2Y3ZjUxYTBkMmVmNWZjNGFkNGY2YWI5NTdlZDlhZDY2MzA0NjY0ZGMzM2JhOTI2ZDRhYThlZDQzN2QwMDM0ZDhjOWI0ODFjMzIiLCJpYXQiOjE2MDUwMDc1NDYsIm5iZiI6MTYwNTAwNzU0NiwiZXhwIjoyNTUxNjkyMzQ2LCJzdWIiOiIzOTMxMyIsInNjb3BlcyI6W119.mYd2fgdjXyPbi-1GKG6YVMUJW3CtThEn7FXQ3-2s6yuRNzBoXghnvy49sSA2_UCv9LoUiUg_65-3fnJzvYPmoZioHeSTCHcC5EwYFC-nOIxSdlNLGJS4zVGY8_qbp9vg8RQCm_PYbZ9gXOgvYOyaikR8o58b08DbmzA93d_346C1DYoTLKilUKuMkL0Qt9Lz-SfKSMAdJp0hfh9HLxtZHmAW08urpsGfJxe_IEfMKw6WcNDiDx_ZjYtzMDACbC11c8FcFRYGrHxd9xJHFfqA0cQj9awsIJxnHyWxBIrVPio17xP-4uMTA79lqKMymgH1xzbRhNzeO_A4jXAqslDZf4XVDNohwk0X45ZEN9fI0M8vcc60VpEzW3nq2-IcOJJC42mk_1H8DfijvlnmWuFhMKPxQIr9YySmDuA0-pkr1mPKAFV6ENZYmYSaAMQCXtQfEfTL6UW5jd4jAvoALYJxLWBUT8pJk9E-LQsEk3b3dIN2fKSa_iYhwef-dsxzNYXFlcg3Vlwu3iLlidHKu_9taAVSvzq14wjctEW3njH7BtESjM8--8xXzCKVw3iWlUJtTmLOtJGRO2dYTM2i0-3OeI0ozXoZFnvkdkylmCVtnF4zgsok0pLiSmmNhnFgFf51hcftKXVM1l5zSEWU5VoML8-cs2KuMCSFVZb7Oz0ieb0'}
+headers = {
+    'Authorization': 'Bearer ' + config.api_userkey,
+    'Content-Type': 'application/json; charset=utf-8'
+}
 
 query = {
 
@@ -71,7 +75,7 @@ sku_list = get_codes()
 
 for sku in sku_list:
     resp = requests.get(
-        f'https://www.robotevents.com/api/v2/events?sku%5B%5D={sku}')  # , params={'Authorization': 'Bearer' 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiNTYzZTU0M2Y3ZjUxYTBkMmVmNWZjNGFkNGY2YWI5NTdlZDlhZDY2MzA0NjY0ZGMzM2JhOTI2ZDRhYThlZDQzN2QwMDM0ZDhjOWI0ODFjMzIiLCJpYXQiOjE2MDUwMDc1NDYsIm5iZiI6MTYwNTAwNzU0NiwiZXhwIjoyNTUxNjkyMzQ2LCJzdWIiOiIzOTMxMyIsInNjb3BlcyI6W119.mYd2fgdjXyPbi-1GKG6YVMUJW3CtThEn7FXQ3-2s6yuRNzBoXghnvy49sSA2_UCv9LoUiUg_65-3fnJzvYPmoZioHeSTCHcC5EwYFC-nOIxSdlNLGJS4zVGY8_qbp9vg8RQCm_PYbZ9gXOgvYOyaikR8o58b08DbmzA93d_346C1DYoTLKilUKuMkL0Qt9Lz-SfKSMAdJp0hfh9HLxtZHmAW08urpsGfJxe_IEfMKw6WcNDiDx_ZjYtzMDACbC11c8FcFRYGrHxd9xJHFfqA0cQj9awsIJxnHyWxBIrVPio17xP-4uMTA79lqKMymgH1xzbRhNzeO_A4jXAqslDZf4XVDNohwk0X45ZEN9fI0M8vcc60VpEzW3nq2-IcOJJC42mk_1H8DfijvlnmWuFhMKPxQIr9YySmDuA0-pkr1mPKAFV6ENZYmYSaAMQCXtQfEfTL6UW5jd4jAvoALYJxLWBUT8pJk9E-LQsEk3b3dIN2fKSa_iYhwef-dsxzNYXFlcg3Vlwu3iLlidHKu_9taAVSvzq14wjctEW3njH7BtESjM8--8xXzCKVw3iWlUJtTmLOtJGRO2dYTM2i0-3OeI0ozXoZFnvkdkylmCVtnF4zgsok0pLiSmmNhnFgFf51hcftKXVM1l5zSEWU5VoML8-cs2KuMCSFVZb7Oz0ieb0'}).json()
+        f'https://www.robotevents.com/api/v2/events?sku%5B%5D={sku}')
     print(resp)
     resp_dict = resp.json()
     df_temp = pd.DataFrame.from_dict(resp_dict)

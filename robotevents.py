@@ -1,11 +1,11 @@
-import pandas as pd
+import csv
+import os
 import requests
 import json
-import csv
+import pandas as pd
+import numpy as np
 from pandas.io.json import json_normalize
 import config  # This file contains the bearer key
-import os
-import numpy as np
 
 pd.set_option('display.max_rows', None)
 os.system('clear')
@@ -38,6 +38,7 @@ df_competitions.drop(columns=(['program.id', 'program.name', 'program.code', 'se
                                'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'divisions', 'level', 'ongoing', 'event_type']), inplace=True)
 print(df_competitions)
 event_list = df_competitions['id']
+event_list.drop(labels=3, inplace=True)  # Event was canceled
 
 # Get a list of teams in each event
 df_teams = pd.DataFrame()
@@ -67,14 +68,14 @@ df_ranks.drop_duplicates(inplace=True)
 print(df_ranks)
 
 # Get skills rankings for each team in list
-df_skills = pd.DataFrame()
-for id in team_list:
-    df_temp = make_dataframe('teams/'+str(id)+'/skills', query)
-    df_skills = df_skills.append(df_temp, ignore_index=True)
-df_skills.drop(columns=(['id',  'team.code', 'season.id',
-                         'season.name', 'season.code']), inplace=True)
-df_skills.drop_duplicates(inplace=True)
-print(df_skills)
+#df_skills = pd.DataFrame()
+# for id in team_list:
+#    df_temp = make_dataframe('teams/'+str(id)+'/skills', query)
+#    df_skills = df_skills.append(df_temp, ignore_index=True)
+# df_skills.drop(columns=(['id',  'team.code', 'season.id',
+#                         'season.name', 'season.code']), inplace=True)
+# df_skills.drop_duplicates(inplace=True)
+# print(df_skills)
 
 # Get awards won per team list
 # df_awards = pd.DataFrame()
@@ -86,17 +87,42 @@ print(df_skills)
 # print(df_awards.columns)
 # print(df_awards)
 
+df_totals = df_ranks.groupby(['team.id']).agg(
+    {'wins': 'sum', 'losses': 'sum', 'ties': 'sum'})
+df_totals.sort_values(by='wins', ascending=False, inplace=True)
+print(df_totals)
+
+
 with pd.ExcelWriter('./output/ScouTTool.xlsx') as writer:  # pylint: disable=abstract-class-instantiated
     for id in event_list:
         df_temp = make_dataframe('events/'+str(id)+'/teams', query)
         name = str(id)
-        df_temp.drop(columns=(['program.id', 'program.name', 'program.code', 'location.venue', 'location.address_1', 'location.address_2',
+        df_temp.drop(columns=(['robot_name', 'organization', 'grade', 'location.region', 'program.id', 'program.name', 'program.code', 'location.venue', 'location.address_1', 'location.address_2',
                                'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'registered']), inplace=True)
+        result = pd.merge(df_temp, df_totals,
+                          left_on='id', right_on='team.id')
         print(name)
-        print(df_temp)
+        print(result)
+        print()
         df_temp.to_excel(writer, sheet_name=name, index=False)
     df_competitions.to_excel(writer, sheet_name='Events', index=False)
     df_teams.to_excel(writer, sheet_name='Teams', index=False)
     df_ranks.to_excel(writer, sheet_name='Rankings', index=False)
-    df_skills.to_excel(writer, sheet_name='Skills', index=False)
+#    df_skills.to_excel(writer, sheet_name='Skills', index=False)
 #    df_awards.to_excel(writer, sheet_name='Awards', index=False)
+
+
+#    df_awards.to_excel(writer, sheet_name='Awards', index=False)
+
+#from trueskill import Rating
+#from trueskill.mathematics import cdf
+#
+# def Pwin(rA=Rating(), rB=Rating()):
+#    deltaMu = rA.mu - rB.mu
+#    rsss = sqrt(rA.sigma**2 + rB.sigma**2)
+#    return cdf(deltaMu/rsss)
+#
+# def Pwin(rAlist=[Rating()],  rBlist=[Rating()]):
+#    deltaMu = sum( [x.mu for x in rAlist])  - sum( [x.mu for x in  rBlist])
+#    rsss = sqrt(sum( [x.sigma**2 for x in  rAlist]) + sum( [x.sigma**2 for x in rBlist]) )
+#    return cdf(deltaMu/rsss)

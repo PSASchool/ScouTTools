@@ -1,3 +1,4 @@
+import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
@@ -17,11 +18,16 @@ region.send_keys(f'{EVENT_REGION}')
 level.send_keys(f'{GRADE_LEVEL}')
 # region.send_keys(Keys.RETURN)
 
-time.sleep(10)
+time.sleep(5)
+os.system('clear')
 
 # .to_csv('skills.csv', index=False)
 df = pd.read_html(browser.page_source)
 df[0].to_csv('./output/%s.csv' % EVENT_REGION, index=False)
-df_skills = pd.read_csv('./output/%s.csv' % EVENT_REGION)
+df_temp = pd.read_csv('./output/%s.csv' % EVENT_REGION)
 browser.close()
+df_temp.drop(columns=(['Highest Programming Score Timestamp',
+                       'Highest Driver Score Timestamp', 'Event Region', 'Country']))
+df_skills = df_temp.reindex(columns=['Team Number', 'Team Name', 'Organization', 'Rank', 'Score', 'Programming Skills',
+                                     'Driver Skills', 'Highest Programming Skills', 'Highest Driver Skills', 'Event Region'])
 print(df_skills)
