@@ -36,9 +36,15 @@ def make_dataframe(uri, query):
 df_competitions = make_dataframe('events', query)
 df_competitions.drop(columns=(['program.id', 'program.name', 'program.code', 'season.id', 'season.name', 'season.code', 'location.venue', 'location.address_1', 'location.address_2',
                                'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'divisions', 'level', 'ongoing', 'event_type']), inplace=True)
+canceled = df_competitions[df_competitions['sku']
+                           == 'RE-VRC-20-2659'].index  # Event was canceled
+df_competitions.drop(canceled, inplace=True)
 print(df_competitions)
+
 event_list = df_competitions['id']
-event_list.drop(labels=3, inplace=True)  # Event was canceled
+finalized = df_competitions[df_competitions['awards_finalized'] == True].index
+df_upcomming = df_competitions.drop(finalized)
+future_events = df_upcomming['id']
 
 # Get a list of teams in each event
 df_teams = pd.DataFrame()
@@ -46,15 +52,15 @@ for id in event_list:
     df_temp = make_dataframe('events/'+str(id)+'/teams', query)
     df_teams = df_teams.append(df_temp, ignore_index=True)
     name = str(id)
-    df_name = df_temp
-    df_name.drop(columns=(['program.id', 'program.name', 'program.code', 'location.venue', 'location.address_1', 'location.address_2',
-                           'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'registered']), inplace=True)
-    print(df_name)
+#    df_name = df_temp
+#    df_name.drop(columns=(['program.id', 'program.name', 'program.code', 'location.venue', 'location.address_1', 'location.address_2',
+#                           'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'registered']), inplace=True)
+#    print(df_name)
 
 df_teams.drop(columns=(['program.id', 'program.name', 'program.code', 'location.venue', 'location.address_1', 'location.address_2',
                         'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'registered']), inplace=True)
 df_teams.drop_duplicates(inplace=True)
-print(df_teams)
+# print(df_teams)
 
 # Get rankings for each team in list
 df_ranks = pd.DataFrame()
@@ -65,17 +71,20 @@ for id in team_list:
 df_ranks.drop(columns=(['id', 'division.id', 'division.name',
                         'division.code', 'team.code']), inplace=True)
 df_ranks.drop_duplicates(inplace=True)
-print(df_ranks)
+df_rank_tot = df_ranks.groupby(['team.id']).agg(
+    {'wins': 'sum', 'losses': 'sum', 'ties': 'sum'})
+# print(df_ranks)
 
 # Get skills rankings for each team in list
-#df_skills = pd.DataFrame()
-# for id in team_list:
-#    df_temp = make_dataframe('teams/'+str(id)+'/skills', query)
-#    df_skills = df_skills.append(df_temp, ignore_index=True)
-# df_skills.drop(columns=(['id',  'team.code', 'season.id',
-#                         'season.name', 'season.code']), inplace=True)
-# df_skills.drop_duplicates(inplace=True)
-# print(df_skills)
+df_skills = pd.DataFrame()
+for id in team_list:
+    df_temp = make_dataframe('teams/'+str(id)+'/skills', query)
+    df_skills = df_skills.append(df_temp, ignore_index=True)
+df_skills.drop(columns=(['id', 'rank', 'team.code', 'season.id',
+                         'season.name', 'season.code']), inplace=True)
+df_skills.drop_duplicates(inplace=True)
+skills_grp = df_skills.groupby(['team.id', 'type']).agg({'score': 'max'})
+ustk_skills = skills_grp.unstack('type', fill_value=0)
 
 # Get awards won per team list
 # df_awards = pd.DataFrame()
@@ -87,28 +96,25 @@ print(df_ranks)
 # print(df_awards.columns)
 # print(df_awards)
 
-df_totals = df_ranks.groupby(['team.id']).agg(
-    {'wins': 'sum', 'losses': 'sum', 'ties': 'sum'})
-df_totals.sort_values(by='wins', ascending=False, inplace=True)
-print(df_totals)
-
-
 with pd.ExcelWriter('./output/ScouTTool.xlsx') as writer:  # pylint: disable=abstract-class-instantiated
-    for id in event_list:
+    for id in future_events:
         df_temp = make_dataframe('events/'+str(id)+'/teams', query)
         name = str(id)
         df_temp.drop(columns=(['robot_name', 'organization', 'grade', 'location.region', 'program.id', 'program.name', 'program.code', 'location.venue', 'location.address_1', 'location.address_2',
                                'location.city', 'location.postcode', 'location.country', 'location.coordinates.lat', 'location.coordinates.lon', 'registered']), inplace=True)
-        result = pd.merge(df_temp, df_totals,
+        step_1 = pd.merge(df_temp, df_rank_tot,
                           left_on='id', right_on='team.id')
+        result = pd.merge(step_1, ustk_skills,
+                          left_on='id', right_on='team.id')
+        result.sort_values(by='wins', ascending=False, inplace=True)
         print(name)
         print(result)
         print()
-        df_temp.to_excel(writer, sheet_name=name, index=False)
+        result.to_excel(writer, sheet_name=name, index=False)
     df_competitions.to_excel(writer, sheet_name='Events', index=False)
     df_teams.to_excel(writer, sheet_name='Teams', index=False)
     df_ranks.to_excel(writer, sheet_name='Rankings', index=False)
-#    df_skills.to_excel(writer, sheet_name='Skills', index=False)
+    df_skills.to_excel(writer, sheet_name='Skills', index=False)
 #    df_awards.to_excel(writer, sheet_name='Awards', index=False)
 
 
